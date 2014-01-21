@@ -25,7 +25,6 @@ import org.review_board.ereviewboard.core.model.Repository;
 import org.review_board.ereviewboard.core.model.RepositoryType;
 import org.review_board.ereviewboard.egit.core.internal.Activator;
 import org.review_board.ereviewboard.egit.core.internal.TraceLocation;
-
 /**
  * @author Robert Munteanu
  * 
@@ -34,21 +33,22 @@ public class EGitSCMFileContentsLocator implements SCMFileContentsLocator {
 
     private Repository codeRepository;
     private String revision;
+    private String filePath;
 
     public void init(Repository codeRepository, String filePath, String revision) {
 
         this.codeRepository = codeRepository;
         this.revision = revision;
+        this.filePath = filePath;
     }
 
     public boolean isEnabled() {
-
         return codeRepository != null && codeRepository.getTool() == RepositoryType.Git;
     }
 
     public byte[] getContents(IProgressMonitor monitor) throws CoreException {
         
-        if ( FileDiff.PRE_CREATION.equals(revision) )
+        if ( revision == null )
             return new byte[0];
         
         for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
@@ -61,10 +61,12 @@ public class EGitSCMFileContentsLocator implements SCMFileContentsLocator {
             GitProvider gitProvider = (GitProvider) provider;
             
             GitProjectData data = gitProvider.getData();
-            
+
             RepositoryMapping repositoryMapping = data.getRepositoryMapping(project);
             
             org.eclipse.jgit.lib.Repository repository = repositoryMapping.getRepository();
+            
+            
             
 			try {
 				ObjectId objectId = repository.resolve(revision);
@@ -94,7 +96,6 @@ public class EGitSCMFileContentsLocator implements SCMFileContentsLocator {
 			}
 			
         }
-        
 		throw new CoreException(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 
 			"No repository found to revision id: " + revision + ".\nYou should have the GIT project "
 					+ this.codeRepository.getName() + " loaded and shared as GIT project on Eclipse."));

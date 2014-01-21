@@ -5,4 +5,51 @@
      	<scmFileContentsLocator class="org.review_board.ereviewboard.egit.core.internal.actions.EGitSCMFileContentsLocator">
      </scmFileContentsLocator>
    </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.review_board.ereviewboard.egit.ui.projectContributions"
+            objectClass="org.eclipse.core.resources.IProject">
+         <menu
+               id="org.review_board.ereviewboard.egit.ui.menu1"
+               label="Review Request"
+               path="additions">
+         </menu>
+         <action
+               class="org.review_board.ereviewboard.internal.actions.CreateReviewRequestAction"
+               icon="icons/reviewboard-icon.png"
+               id="org.review_board.ereviewboard.egit.ui.StartReview"
+               label="Create Review Request"
+               menubarPath="team.main/group1">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.review_board.ereviewboard.ui.taskDiffActions">
+      <taskDiffAction
+            class="org.review_board.ereviewboard.internal.actions.UpdateReviewRequestAction"
+            id="org.review_board.ereviewboard.egit.ui.updateDiff"
+            label="Update Diff">
+      </taskDiffAction>
+      <taskDiffAction
+            class="org.review_board.ereviewboard.internal.actions.ApplyDiffAction"
+            id="org.review_board.ereviewboard.egit.ui.applyDiff"
+            label="Apply Diff">
+      </taskDiffAction>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.review_board.ereviewboard.egit.ui.preferences.ReviewRequestPreferencePage"
+            id="org.review_board.ereviewboard.egit.ui.preferences.ReviewRequestPreferencePage"
+            name="Review Request">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.review_board.ereviewboard.egit.ui.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
 </plugin>

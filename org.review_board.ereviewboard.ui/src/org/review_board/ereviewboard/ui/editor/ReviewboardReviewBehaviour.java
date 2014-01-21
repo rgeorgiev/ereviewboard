@@ -14,14 +14,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.mylyn.reviews.core.model.IComment;
+import org.eclipse.mylyn.reviews.core.model.ICommentContainer;
 import org.eclipse.mylyn.reviews.core.model.IFileItem;
-import org.eclipse.mylyn.reviews.core.model.IFileRevision;
+import org.eclipse.mylyn.reviews.core.model.IFileVersion; ///
 import org.eclipse.mylyn.reviews.core.model.ILineLocation;
-import org.eclipse.mylyn.reviews.core.model.ILocation;
 import org.eclipse.mylyn.reviews.core.model.IReviewItem;
-import org.eclipse.mylyn.reviews.core.model.ITopic;
+import org.eclipse.mylyn.reviews.core.model.IComment; ///
 import org.eclipse.mylyn.reviews.ui.ReviewBehavior;
 import org.eclipse.mylyn.tasks.core.ITask;
+import org.eclipse.team.core.history.IFileRevision;
 import org.review_board.ereviewboard.core.client.DiffCommentLineMapper;
 import org.review_board.ereviewboard.core.client.ReviewboardClient;
 import org.review_board.ereviewboard.core.exception.ReviewboardException;
@@ -52,12 +53,12 @@ public class ReviewboardReviewBehaviour extends ReviewBehavior {
     }
     
     @Override
-    public IStatus addTopic(IReviewItem fileItem, ITopic topic, IProgressMonitor monitor) {
+    public IStatus addComment(IReviewItem fileItem, IComment topic, IProgressMonitor monitor) {
         
         monitor.beginTask("Posting draft comment", 3);
         
         try {
-            ILineLocation location = (ILineLocation) topic.getLocation();
+            ILineLocation location = (ILineLocation) topic.getLocations();
             
             int fileId = Integer.parseInt(_fileItem.getId());
             int reviewRequestId = Integer.parseInt(getTask().getTaskId());
@@ -67,7 +68,7 @@ public class ReviewboardReviewBehaviour extends ReviewBehavior {
             DiffCommentLineMapper lineMapper = new DiffCommentLineMapper(diffData);
             
             int firstLine = findFirstLine(topic, location, lineMapper);
-            int numLines = Math.max(location.getTotalMax() - location.getTotalMin(), 1);
+            int numLines = Math.max(location.getRangeMax() - location.getRangeMin(), 1);
             String text = topic.getDescription();
             int fileDiffId = Integer.parseInt(_fileItem.getBase().getId().toString());
             
@@ -100,39 +101,47 @@ public class ReviewboardReviewBehaviour extends ReviewBehavior {
         }
     }
 
-    private int findFirstLine(ITopic topic, ILineLocation location, DiffCommentLineMapper lineMapper) {
+    private int findFirstLine(IComment topic, ILineLocation location, DiffCommentLineMapper lineMapper) {
         
-        IReviewItem topicItem = topic.getItem();
-        IFileRevision baseRevision = _fileItem.getBase();
-        IFileRevision targetRevision = _fileItem.getTarget();
+        ICommentContainer topicItem = topic.getItem(); //IReviewItem topicItem = topic.getItem();
+        IFileVersion baseRevision = _fileItem.getBase(); //
+        IFileVersion targetRevision = _fileItem.getTarget(); //
         boolean mapForOldFile = topicItem == baseRevision;
         boolean mapForNewFile = topicItem == targetRevision;
         
         int firstLine;
         if ( mapForOldFile ^ mapForNewFile ) {
-            firstLine = mapForOldFile ? lineMapper.getDiffMappingForOldFile(location.getTotalMin())
-                    : lineMapper.getDiffMappingForNewFile(location.getTotalMin());    
+            firstLine = mapForOldFile ? lineMapper.getDiffMappingForOldFile(location.getRangeMin())//
+                    : lineMapper.getDiffMappingForNewFile((location).getRangeMin());    
         } else {
             // old Reviews UI versions pass a generic 'fileItem' item to the topic which
             // can not be used to determine the revision to annotate
             try {
-                firstLine = lineMapper.getDiffMappingForNewFile(location.getTotalMin());
+                firstLine = lineMapper.getDiffMappingForNewFile(location.getRangeMin());
             } catch (RuntimeException e) {
-                firstLine = lineMapper.getDiffMappingForOldFile(location.getTotalMin());
+                firstLine = lineMapper.getDiffMappingForOldFile(location.getRangeMin());
             }
         }
         return firstLine;
     }
 
-    private void setAuthorFromPostedDiffComment(ITopic topic, DiffComment diffComment) {
+    ///
+    private void setAuthorFromPostedDiffComment(IComment topic, DiffComment diffComment) {
     
         topic.getAuthor().setId(diffComment.getUsername());
         topic.getAuthor().setDisplayName(_client.getClientData().getUser(diffComment.getUsername()).getFullName());
         
-        for ( IComment comment : topic.getComments() ) {
+        for ( IComment comment : topic.getReplies() ) { //
 
             comment.getAuthor().setId(diffComment.getUsername());
             comment.getAuthor().setDisplayName(_client.getClientData().getUser(diffComment.getUsername()).getFullName());
         }
     }
+
+    //added method
+    @Override
+    public IFileRevision getFileRevision(IFileVersion reviewFileVersion) {
+        return reviewFileVersion.getFileRevision();
+    }
+
 }

@@ -55,6 +55,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.mylyn.commons.core.StatusHandler;
 import org.eclipse.mylyn.commons.net.AbstractWebLocation;
+import org.eclipse.mylyn.commons.net.AuthenticationType;
 import org.eclipse.mylyn.tasks.core.IRepositoryListener;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.core.TaskRepositoryLocationFactory;
@@ -87,10 +88,12 @@ public class ReviewboardClientManager implements IRepositoryListener {
         String repositoryUrl = taskRepository.getRepositoryUrl();
         ReviewboardClient repository = clientByUrl.get(repositoryUrl);
 
-        if (repository == null) {
+        
+ //       if (repository == null) {
             AbstractWebLocation location =
                     taskRepositoryLocationFactory.createWebLocation(taskRepository);
 
+            
             ReviewboardClientData data = dataByUrl.get(repositoryUrl);
             if (data == null) {
                 data = new ReviewboardClientData();
@@ -99,7 +102,7 @@ public class ReviewboardClientManager implements IRepositoryListener {
 
             repository = new RestfulReviewboardClient(location, data, taskRepository);
             clientByUrl.put(taskRepository.getRepositoryUrl(), repository);
-        }
+ //       }
 
         return repository;
     }

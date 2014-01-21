@@ -18,6 +18,7 @@ import java.util.Map;
 
 import org.eclipse.mylyn.reviews.core.model.*;
 import org.eclipse.mylyn.reviews.internal.core.model.ReviewsFactory;
+//import org.eclipse.team.core.history.IFileRevision;
 import org.review_board.ereviewboard.core.ReviewboardCorePlugin;
 import org.review_board.ereviewboard.core.ReviewboardDiffMapper;
 import org.review_board.ereviewboard.core.TraceLocation;
@@ -57,15 +58,15 @@ public class ReviewModelFactory {
             fileItem.setName(fileDiff.getDestinationFile());
             fileItem.setId(String.valueOf(fileDiff.getId()));
             
-            IFileRevision from = FACTORY.createFileRevision();
+            IFileVersion from = FACTORY.createFileVersion();
             from.setId(String.valueOf(fileDiff.getId()));
             from.setPath(fileDiff.getSourceFile());
-            from.setRevision(fileDiff.getSourceRevision());
+//            from.setRevision(fileDiff.getSourceRevision());
 
             // TODO: should we set and id for 'to' as well? might become problematic to have the same ids
-            IFileRevision to = FACTORY.createFileRevision();
+            IFileVersion to = FACTORY.createFileVersion();
             to.setPath(fileDiff.getDestinationFile());
-            to.setRevision(fileDiff.getDestinationDetail());
+            to.setDescription(fileDiff.getDestinationDetail());
             
             fileItem.setBase(from);
             fileItem.setTarget(to);
@@ -81,13 +82,13 @@ public class ReviewModelFactory {
         List<DiffComment> sortedDiffComments = new ArrayList<DiffComment>(diffComments);
         Collections.sort(sortedDiffComments, DiffComment.COMPARATOR_ID);
         
-        Map<Range, ITopic> rangeToTopics = new HashMap<Range, ITopic>();
+        Map<Range, IComment> rangeToTopics = new HashMap<Range, IComment>();
         
         for ( DiffComment diffComment : sortedDiffComments ) {
             
             int[] lineMappings = diffCommentLineMapper.getLineMappings(diffComment.getFirstLine());
             
-            IFileRevision fileRevision;
+            IFileVersion fileRevision;
             int mappedLine;
 
             // default to base
@@ -110,12 +111,12 @@ public class ReviewModelFactory {
             
             ReviewboardCorePlugin.getDefault().trace(TraceLocation.MODEL, "Converted " +
             		"DiffComment [" + diffComment.getFirstLine()+ ", " + diffComment.getNumLines()+"] " +
-    				"to ILineRange [" + line.getStart()+", " + line.getEnd()+"] on " + fileRevision.getPath() + " ( " + fileRevision.getRevision() + " )");
+    				"to ILineRange [" + line.getStart()+", " + line.getEnd()+"] on " + fileRevision.getPath() + " ( " + fileRevision.getDescription() + " )");
 
             ILineLocation location = FACTORY.createLineLocation();
             location.getRanges().add(line);
             
-            ITopic topic = rangeToTopics.get(new Range(line));
+            IComment topic = rangeToTopics.get(new Range(line));
 
             IUser author = createUser(diffComment.getUsername());
             if ( topic == null ) {
@@ -129,17 +130,17 @@ public class ReviewModelFactory {
             topicComment.setDescription(diffComment.getText());
             topicComment.setDraft(Boolean.FALSE.equals(diffComment.getPublic()));
             
-            topic.getComments().add(topicComment);
+            topic.getReplies().add(topicComment);
         }
     }
 
-    private ITopic createTopic(DiffComment diffComment, IFileRevision fileRevision, ILineLocation location, IUser author) {
+    private IComment createTopic(DiffComment diffComment, IFileVersion fileRevision, ILineLocation location, IUser author) {
         
-        ITopic topic = FACTORY.createTopic();
+        IComment topic = FACTORY.createComment();
         topic.setId(String.valueOf(diffComment.getId()));
         topic.setAuthor(author);
         topic.setCreationDate(diffComment.getTimestamp());
-        topic.setLocation(location);
+        topic.getLocations().add(location);
         topic.setItem(fileRevision);
         topic.setDraft(false);
         topic.setDescription(diffComment.getText());

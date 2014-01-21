@@ -14,7 +14,15 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.osgi.service.localization.BundleLocalization;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.namespace.BundleNamespace;
 
 /**
  * @author Robert Munteanu
@@ -25,11 +33,12 @@ public class Activator extends Plugin {
     public static final String PLUGIN_ID = "org.review_board.ereviewboard.subclipse.ui";
 
     private static volatile Activator DEFAULT;
-
+    
+    private IPreferenceStore store;
     public void start(BundleContext context) throws Exception {
 
         super.start(context);
-
+        store = new ScopedPreferenceStore(InstanceScope.INSTANCE, context.getBundle().getSymbolicName());
         DEFAULT = this;
     }
 
@@ -79,4 +88,8 @@ public class Activator extends Plugin {
         
         log(severity, message, null);
     }
+
+	public IPreferenceStore getPreferenceStore() {
+		return store;
+	}
 }

@@ -96,7 +96,7 @@ public class ReviewboardHttpClient {
 
         GetMethod loginRequest = new GetMethod(location.getUrl() + "/api/info/");
         Credentials credentials = new UsernamePasswordCredentials(username, password);
-
+        
         monitor = Policy.monitorFor(monitor);
         
         String foundSessionCookie = null;
@@ -109,11 +109,12 @@ public class ReviewboardHttpClient {
             
             // perform authentication
             String authHeader = new BasicScheme().authenticate(credentials, loginRequest);
+
             loginRequest.addRequestHeader("Authorization", authHeader);
             
             // execute and validate call
             int requestStatus = executeRequest(loginRequest, monitor);
-            
+
             switch (requestStatus) {
 
             case HttpStatus.SC_OK:
@@ -144,13 +145,14 @@ public class ReviewboardHttpClient {
         }
     }
 
+    //gives 401, can't remember password
     private void ensureIsLoggedIn(IProgressMonitor monitor) throws ReviewboardException {
-        
         if ( sessionCookie != null )
             return;
         
         AuthenticationCredentials credentials = location.getCredentials(AuthenticationType.REPOSITORY);
         sessionCookie = login(credentials.getUserName(), credentials.getPassword(), monitor);
+        
     }
 
     private String stripSlash(String url) {

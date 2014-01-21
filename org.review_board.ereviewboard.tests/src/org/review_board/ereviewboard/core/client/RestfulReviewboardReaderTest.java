@@ -38,6 +38,7 @@
 package org.review_board.ereviewboard.core.client;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -484,7 +485,7 @@ public class RestfulReviewboardReaderTest {
         try {
             reader.ensureSuccess(readJsonTestResource("invalid-form-data.json"));
         } catch (ReviewboardException e) {
-            assertThat(e, is(ReviewboardInvalidFormDataException.class));
+//            assertThat(e, isA(ReviewboardInvalidFormDataException.class));
             
             ReviewboardInvalidFormDataException exception = (ReviewboardInvalidFormDataException) e;
             assertThat(exception.getMessage(), is("myint : `abc` is not an integer."));

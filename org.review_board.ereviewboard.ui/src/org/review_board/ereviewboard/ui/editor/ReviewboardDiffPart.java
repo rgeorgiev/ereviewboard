@@ -35,7 +35,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.mylyn.internal.reviews.ui.compare.FileItemCompareEditorInput;
 import org.eclipse.mylyn.internal.tasks.ui.editors.EditorUtil;
 import org.eclipse.mylyn.reviews.core.model.IFileItem;
-import org.eclipse.mylyn.reviews.core.model.IFileRevision;
+import org.eclipse.mylyn.reviews.core.model.IFileVersion;
 import org.eclipse.mylyn.reviews.ui.ReviewUi;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
@@ -158,6 +158,7 @@ public class ReviewboardDiffPart extends AbstractTaskEditorPart {
                 
                 IFileItem item = (IFileItem) selection.getFirstElement();
                 
+
                 if ( FileDiff.DEV_NULL.equals(item.getName()) ) {
                     MessageDialog.openWarning(null, "Unable to open diff", "The diff for this file can not be generated as it has been deleted.");
                     return;
@@ -165,6 +166,8 @@ public class ReviewboardDiffPart extends AbstractTaskEditorPart {
                 
                 ReviewUi.setActiveReview(new ReviewboardReviewBehaviour(getTaskEditorPage().getTask(), item, diffRevision, getClient(), listener));
                 
+                
+                //was SCMFileContentsLocator locator = getSCMFileContentsLocator(taskMapper, item.getBase());
                 SCMFileContentsLocator locator = getSCMFileContentsLocator(taskMapper, item.getBase());
                 if ( locator == null ) {
                     MessageDialog.openWarning(null, "Unable to load base file", "Unable to load base file contents since no plug-in was able to handle the repository " + taskMapper.getRepository());
@@ -173,7 +176,9 @@ public class ReviewboardDiffPart extends AbstractTaskEditorPart {
                 
                 ReviewboardReviewBehaviour reviewBehaviour = new ReviewboardReviewBehaviour(getTaskEditorPage().getTask() , item, diffRevision, getClient(), listener);
                 
-                CompareUI.openCompareEditor(new ReviewboardCompareEditorInput(item, reviewBehaviour, getTaskData(), locator, diffRevision));
+                ReviewboardCompareEditorInput compareEditor = new ReviewboardCompareEditorInput(item, reviewBehaviour, getTaskData(), locator, diffRevision);
+                
+                CompareUI.openCompareEditor(compareEditor);
             }
    
         });
@@ -260,14 +265,17 @@ public class ReviewboardDiffPart extends AbstractTaskEditorPart {
         return ReviewboardCorePlugin.getDefault().getConnector().getClientManager().getClient(getTaskRepository());
     }
     
-    private SCMFileContentsLocator getSCMFileContentsLocator(ReviewboardTaskMapper taskMapper, IFileRevision fileRevision) {
+    private SCMFileContentsLocator getSCMFileContentsLocator(ReviewboardTaskMapper taskMapper, IFileVersion fileRevision) {
         
         IConfigurationElement[] configurationElements = Platform.getExtensionRegistry().getConfigurationElementsFor(EXTENSION_POINT_SCM_FILE_CONTENTS_LOCATOR);
 
         for ( IConfigurationElement element : configurationElements ) { 
             try {
                 SCMFileContentsLocator locator = (SCMFileContentsLocator) element.createExecutableExtension("class");
-                locator.init(taskMapper.getRepository(), fileRevision.getPath(), fileRevision.getRevision());
+                
+                //was locator.init(taskMapper.getRepository(), fileRevision.getPath(), fileRevision.getId());
+                //description is SHA1
+                locator.init(taskMapper.getRepository(), fileRevision.getPath(), fileRevision.getDescription());
                 if ( locator.isEnabled() )
                     return locator;
             } catch (CoreException e) {

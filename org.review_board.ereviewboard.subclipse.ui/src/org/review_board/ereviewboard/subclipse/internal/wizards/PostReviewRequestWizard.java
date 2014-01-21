@@ -28,12 +28,12 @@ import org.review_board.ereviewboard.core.model.ReviewRequest;
 import org.review_board.ereviewboard.subclipse.Activator;
 import org.review_board.ereviewboard.subclipse.TraceLocation;
 import org.review_board.ereviewboard.ui.util.ReviewboardImages;
-import org.tigris.subversion.subclipse.core.ISVNLocalResource;
-import org.tigris.subversion.subclipse.core.ISVNRepositoryLocation;
-import org.tigris.subversion.subclipse.core.SVNException;
-import org.tigris.subversion.subclipse.core.resources.SVNWorkspaceRoot;
-import org.tigris.subversion.svnclientadapter.ISVNClientAdapter;
-import org.tigris.subversion.svnclientadapter.SVNClientException;
+//import org.tigris.subversion.subclipse.core.ISVNLocalResource;
+//import org.tigris.subversion.subclipse.core.ISVNRepositoryLocation;
+//import org.tigris.subversion.subclipse.core.SVNException;
+//import org.tigris.subversion.subclipse.core.resources.SVNWorkspaceRoot;
+//import org.tigris.subversion.svnclientadapter.ISVNClientAdapter;
+//import org.tigris.subversion.svnclientadapter.SVNClientException;
 
 /**
  * @author Robert Munteanu

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.review_board.ereviewboard.egit.ui;singleton:=true
-Bundle-Version: 0.13.2.qualifier
+Bundle-Version: 0.13.4.qualifier
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-Localization: OSGI-INF/l10n/bundle
 Bundle-Vendor: %Bundle-Vendor
@@ -18,5 +18,16 @@ Require-Bundle: org.eclipse.core.runtime,
  org.review_board.ereviewboard.core,
  org.review_board.ereviewboard.ui,
  org.apache.commons.io;bundle-version="1.4.0",
- org.review_board.ereviewboard.egit.core
+ org.review_board.ereviewboard.egit.core,
+ org.eclipse.egit;bundle-version="3.0.3",
+ org.eclipse.egit.core;bundle-version="3.0.3",
+ org.eclipse.egit.doc;bundle-version="3.0.3",
+ org.eclipse.egit.ui;bundle-version="3.0.3",
+ org.eclipse.jgit;bundle-version="3.0.3",
+ org.eclipse.mylyn.reviews.core;bundle-version="2.0.1",
+ org.eclipse.mylyn.reviews.ui;bundle-version="2.0.1",
+ org.eclipse.ui.forms;bundle-version="3.6.1",
+ org.eclipse.jface.text;bundle-version="3.8.101",
+ org.eclipse.ui.editors;bundle-version="3.8.100",
+ org.eclipse.mylyn.commons.workbench;bundle-version="3.10.0"
 Bundle-Activator: org.review_board.ereviewboard.egit.ui.internal.Activator
