@@ -11,9 +11,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.review_board.ereviewboard.ui.wizard.PostReviewRequestWizard;
 
-/**
- * @author Robert Munteanu
- */
+
 public class CreateReviewRequestAction implements IActionDelegate {
 
     private IProject currentProject;

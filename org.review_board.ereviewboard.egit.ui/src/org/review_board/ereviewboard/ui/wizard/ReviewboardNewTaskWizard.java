@@ -11,7 +11,9 @@
 package org.review_board.ereviewboard.ui.wizard;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.mylyn.commons.workbench.browser.BrowserUtil;
 import org.eclipse.mylyn.tasks.core.ITaskMapping;
@@ -20,9 +22,13 @@ import org.eclipse.mylyn.tasks.ui.wizards.NewTaskWizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.review_board.ereviewboard.ui.util.UiUtils;
 
 
 /**
@@ -37,15 +43,18 @@ public class ReviewboardNewTaskWizard extends NewTaskWizard {
 
     @Override
     public void addPages() {
-        super.addPages();
 
+        super.addPages();
+       
         addPage(new ReviewboardUnsupportedCreationWizardPage());
     }
 
+    
     @Override
     public boolean canFinish() {
         return false;
     }
+    
 
     static final class ReviewboardUnsupportedCreationWizardPage extends WizardPage {
         public ReviewboardUnsupportedCreationWizardPage() {

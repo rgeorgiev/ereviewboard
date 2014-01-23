@@ -52,7 +52,7 @@ public class ReviewRequest extends ReviewRequestBase {
     private Date lastUpdated;
     private ReviewRequestStatus status;
     private Integer changeNumber;
-    private String repository;;
+    private String repository;
 
     // TODO Add Diffs
     // TODO Add Screenshots

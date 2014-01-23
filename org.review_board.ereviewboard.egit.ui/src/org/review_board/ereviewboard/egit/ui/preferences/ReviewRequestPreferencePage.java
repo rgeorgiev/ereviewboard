@@ -38,7 +38,8 @@ public class ReviewRequestPreferencePage
 	public void createFieldEditors() {
 		addField(new StringFieldEditor("targetUser", "Default target user",getFieldEditorParent()));
 		addField(new StringFieldEditor("targetGroup", "Default target group",getFieldEditorParent()));
-		
+		addField(new BooleanFieldEditor("guessSummary","Guess summary",getFieldEditorParent()));
+		addField(new BooleanFieldEditor("guessDescription","Guess description",getFieldEditorParent()));
 		
 //		addField(new DirectoryFieldEditor(PreferenceConstants.P_PATH, 
 //				"&Directory preference:", getFieldEditorParent()));

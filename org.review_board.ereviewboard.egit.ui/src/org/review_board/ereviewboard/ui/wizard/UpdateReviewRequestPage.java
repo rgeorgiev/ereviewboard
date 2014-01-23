@@ -1,9 +1,12 @@
 package org.review_board.ereviewboard.ui.wizard;
 
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Composite;
@@ -23,6 +26,7 @@ class UpdateReviewRequestPage extends WizardPage {
 
         super("Update Review Request", "Update Review Request", null);
         setMessage("Provide an optional description for the changes you are about to publish.");
+        
     }
     
     public void createControl(Composite parent) {

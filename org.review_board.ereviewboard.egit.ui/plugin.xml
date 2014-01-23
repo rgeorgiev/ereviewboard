@@ -11,11 +11,6 @@
             adaptable="true"
             id="org.review_board.ereviewboard.egit.ui.projectContributions"
             objectClass="org.eclipse.core.resources.IProject">
-         <menu
-               id="org.review_board.ereviewboard.egit.ui.menu1"
-               label="Review Request"
-               path="additions">
-         </menu>
          <action
                class="org.review_board.ereviewboard.internal.actions.CreateReviewRequestAction"
                icon="icons/reviewboard-icon.png"
@@ -51,5 +46,55 @@
       <initializer
             class="org.review_board.ereviewboard.egit.ui.preferences.PreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="true"
+            locationURI="popup:org.eclipse.egit.ui.RepositoriesView?after=branch">
+         <separator
+               name="org.review_board.ereviewboard.egit.ui.review"
+               visible="true">
+         </separator>
+         <command
+               commandId="org.review_board.ereviewboard.internal.egit.CreateReviewRequestAction"
+               icon="icons/reviewboard-icon.png"
+               label="Create Review Request"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <and>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="org.eclipse.egit.ui.internal.repository.tree.RefNode">
+                        </instanceof>
+                        <not>
+                           <test
+                                 property="GitRepository.isBare">
+                           </test>
+                        </not>
+                        <test
+                              property="GitRepository.isLocalBranch">
+                        </test>
+                     </and>
+                  </iterate>
+                  <count
+                        value="1">
+                  </count>
+               </and>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.review_board.ereviewboard.internal.egit.CreateReviewRequestActionHandler"
+            commandId="org.review_board.ereviewboard.internal.egit.CreateReviewRequestAction">
+         <class
+               class="org.review_board.ereviewboard.internal.egit.CreateReviewRequestActionHandler">
+         </class>
+   org.review_board.ereviewboard.internal.egit.CreateReviewRequestActionHandler   </handler>
    </extension>
 </plugin>

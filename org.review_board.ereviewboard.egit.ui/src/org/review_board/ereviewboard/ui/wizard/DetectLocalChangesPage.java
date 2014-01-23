@@ -16,6 +16,7 @@ import java.util.Set;
 
 
 
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -29,6 +30,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
@@ -62,7 +64,8 @@ import org.eclipse.egit.core.project.RepositoryMapping;
  */
 class DetectLocalChangesPage extends WizardPage {
 
-    private final IProject _project;
+    private IProject _project;
+    private Ref _branch;
     private Table _table;
     private final Set<ChangedFile> _selectedFiles = new HashSet<ChangedFile>();
     
@@ -85,6 +88,17 @@ class DetectLocalChangesPage extends WizardPage {
         _reviewRequest = reviewRequest;
     }
 
+    public DetectLocalChangesPage(Ref branch, org.eclipse.jgit.lib.Repository repository, CreateReviewRequestWizardContext context, ReviewRequest reviewRequest) {
+
+        super("Detect local changes", "Detect local changes", null);
+        
+        setMessage("Select the changes to submit for review. The ReviewBoard instance and the Git repository have been auto-detected.", IMessageProvider.INFORMATION);
+        _branch = branch;
+        gitRepository = repository;
+        _context = context;
+        _reviewRequest = reviewRequest;
+    }
+    
     public void createControl(Composite parent) {
 
         Composite layout = new Composite(parent, SWT.NONE);
@@ -174,23 +188,24 @@ class DetectLocalChangesPage extends WizardPage {
                 
                 public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
                 
-                	GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
-                    
-                	Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
-
-                    GitProjectData data = gitProvider.getData();
-
-                    RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
-                    
-                    //the local git repository for the project
-                    org.eclipse.jgit.lib.Repository projectGitResourse = repositoryMapping.getRepository();
-                    
-                    
+                	if (gitRepository == null) {
+	                	GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
+	                    
+	                	Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
+	
+	                    GitProjectData data = gitProvider.getData();
+	
+	                    RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
+	                    
+	                    //the local git repository for the project
+	                    org.eclipse.jgit.lib.Repository projectGitResourse = repositoryMapping.getRepository();
+	                    setGitRepository(projectGitResourse);
+                	}
                     File f;
-                    if (!projectGitResourse.isBare())
-            			f = projectGitResourse.getWorkTree();
+                    if (!getGitRepository().isBare())
+            			f = getGitRepository().getWorkTree();
             		else
-            			f = projectGitResourse.getDirectory();
+            			f = getGitRepository().getDirectory();
                     String repositoryName = f.getName();
                     
                     
@@ -203,7 +218,7 @@ class DetectLocalChangesPage extends WizardPage {
                     Repository reviewBoardRepository = null;
                     TaskRepository taskRepository = null;
                     
-                    setGitRepository(projectGitResourse);
+                    
                     
                     
                     Activator.getDefault().trace(TraceLocation.MAIN, "Local repository is " + getGitRepository().getWorkTree() + 
@@ -290,9 +305,13 @@ class DetectLocalChangesPage extends WizardPage {
                         //LocalResourceStatus status = projectSvnResource.getStatus();
                         //Activator.getDefault().trace(TraceLocation.MAIN, "Git repository status is " + status);
                         //Assert.isNotNull(status, "No status for resource " + projectGitResourse.toString());
-                        
-                        Git gitClient = new Git(getGitRepository());
-                        ChangedFileFinder changedFileFinder = new ChangedFileFinder(gitClient, _project);
+                    	 ChangedFileFinder changedFileFinder;
+                        if (_project == null) {
+                        	changedFileFinder = new ChangedFileFinder(getGitRepository(), _branch);
+                        } else {
+                        	changedFileFinder = new ChangedFileFinder(getGitRepository(), _project);
+                        }
+                        changedFileFinder = new ChangedFileFinder(getGitRepository(), _project);
                         List<ChangedFile> changedFiles = changedFileFinder.findChangedFiles();
                         
                         Activator.getDefault().trace(TraceLocation.MAIN, "Found " + changedFiles.size() + " changed files.");

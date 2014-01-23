@@ -6,10 +6,13 @@ import java.net.URL;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.mylyn.tasks.ui.wizards.AbstractRepositorySettingsPage;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.review_board.ereviewboard.core.ReviewboardCorePlugin;
 import org.review_board.ereviewboard.core.ReviewboardRepositoryConnector;
 import org.review_board.ereviewboard.core.ReviewboardRepositoryMapper;
@@ -46,6 +49,14 @@ public class ReviewboardRepositorySettingsPage extends AbstractRepositorySetting
     @Override
     public void createControl(Composite parent) {
         super.createControl(parent);
+        
+        Composite control = getControl().getParent();
+        
+        GridLayoutFactory.swtDefaults().applyTo(control);
+        
+        Label descriptionLabel = new Label(control, SWT.NONE );
+        descriptionLabel.setText("Test");
+        setControl(control);
         checkedUrl = getRepositoryUrl();
     }
     
@@ -106,6 +117,10 @@ public class ReviewboardRepositorySettingsPage extends AbstractRepositorySetting
                 // ignore
             }
         }
+        return false;
+    }
+    @Override
+    public boolean canFlipToNextPage() {
         return false;
     }
 

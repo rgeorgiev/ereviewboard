@@ -51,54 +51,72 @@ import org.eclipse.jgit.errors.NoWorkTreeException;
  */
 public class ChangedFileFinder {
 
-	Git client;
+	Repository repository;
 	IProject project;
+	Ref branch;
 
-	public ChangedFileFinder(Git gitClient, IProject project) throws IOException {
+	public ChangedFileFinder(Repository repository, IProject project) throws IOException {
 
-		client = gitClient;
+		this.repository = repository;
 		this.project = project;
 	}
 
+	public ChangedFileFinder(Repository repository, Ref branch) throws IOException {
+
+		this.repository = repository;
+		this.branch = branch;
+	}
 	public List<ChangedFile> findChangedFiles() throws IOException, NoHeadException, GitAPIException{
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		DiffFormatter diffFormatter = new DiffFormatter(outputStream);
-		diffFormatter.setRepository(client.getRepository());
+		diffFormatter.setRepository(repository);
 
-		Ref master = client.getRepository().getRef(client.getRepository().getFullBranch());
-		RemoteConfig remote = null;
-		try {
-			remote = RemoteConfig.getAllRemoteConfigs(client.getRepository().getConfig()).get(0);
-		} catch (URISyntaxException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		Ref currentBranch;
+		if (branch == null) {
+			currentBranch = repository.getRef(repository.getFullBranch());
+		} else {
+			currentBranch = branch;
 		}
-		BranchTrackingStatus btStatus = BranchTrackingStatus.of(client.getRepository(), client.getRepository().getFullBranch());
+		 
+
+		BranchTrackingStatus btStatus = BranchTrackingStatus.of(repository, currentBranch.getName());
 		
-		Ref origin = client.getRepository().getRef(btStatus.getRemoteTrackingBranch());
-		
-		
-		
-		//project path needs to be in projectName/ format
-		String projectPath = project.getFullPath().toString();
-		if (projectPath.startsWith("/")) {
-			projectPath = projectPath.substring(1);
-		}
-		if (!projectPath.endsWith("/")) {
-			projectPath = projectPath + "/";
-		}
+		Ref originBranch = repository.getRef(btStatus.getRemoteTrackingBranch());
 
 		List<DiffEntry> diffs = new ArrayList<DiffEntry>();
-		diffs = diffFormatter.scan(origin.getObjectId(), master.getObjectId());
+		diffs = diffFormatter.scan(originBranch.getObjectId(), currentBranch.getObjectId());
 		List<ChangedFile> changedFiles = new ArrayList<ChangedFile>();
-		for (DiffEntry diff : diffs) {
-			if (diff.getChangeType() == DiffEntry.ChangeType.DELETE) {
-				changedFiles.add(new ChangedFile(diff, diff.getChangeType(), diff.getOldPath()));
-			} else {
-				changedFiles.add(new ChangedFile(diff, diff.getChangeType(), diff.getNewPath()));
+		
+		if (project == null) {
+			for (DiffEntry diff : diffs) {
+				if (diff.getChangeType() == DiffEntry.ChangeType.DELETE) {
+					changedFiles.add(new ChangedFile(diff, diff.getChangeType(), diff.getOldPath()));
+				} else {
+					changedFiles.add(new ChangedFile(diff, diff.getChangeType(), diff.getNewPath()));
+				}
 			}
+		} else {
+			//project path needs to be in projectName/ format
+			String projectPath = project.getFullPath().toString();
+			if (projectPath.startsWith("/")) {
+				projectPath = projectPath.substring(1);
+			}
+			if (!projectPath.endsWith("/")) {
+				projectPath = projectPath + "/";
+			}
+			
+			for (DiffEntry diff : diffs) {
+				if (diff.getChangeType() == DiffEntry.ChangeType.DELETE && diff.getOldPath().contains(projectPath)) {
+					changedFiles.add(new ChangedFile(diff, diff.getChangeType(), diff.getOldPath()));
+				} else if (diff.getNewPath().contains(projectPath)){
+					changedFiles.add(new ChangedFile(diff, diff.getChangeType(), diff.getNewPath()));
+				}
+			}
+			
 		}
+		
+
 
 		return changedFiles;
 

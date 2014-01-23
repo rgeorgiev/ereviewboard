@@ -15,10 +15,14 @@ import org.eclipse.egit.core.project.RepositoryMapping;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.patch.Patch;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.ui.TasksUiUtil;
 import org.eclipse.team.core.RepositoryProvider;
@@ -26,6 +30,7 @@ import org.review_board.ereviewboard.core.client.ReviewboardClient;
 import org.review_board.ereviewboard.core.exception.ReviewboardException;
 import org.review_board.ereviewboard.core.model.Repository;
 import org.review_board.ereviewboard.core.model.ReviewRequest;
+import org.review_board.ereviewboard.core.model.ReviewRequestDraft;
 import org.review_board.ereviewboard.egit.ui.internal.Activator;
 import org.review_board.ereviewboard.egit.ui.internal.TraceLocation;
 import org.review_board.ereviewboard.ui.util.ReviewboardImages;
@@ -37,7 +42,9 @@ import org.review_board.ereviewboard.ui.util.ReviewboardImages;
  */
 public class PostReviewRequestWizard extends Wizard {
     
-    private final IProject _project;
+    private IProject _project = null;
+    private Ref _branch = null;
+    private org.eclipse.jgit.lib.Repository _gitRepository;
     private DetectLocalChangesPage _detectLocalChangesPage;
     private PublishReviewRequestPage _publishReviewRequestPage;
     private final CreateReviewRequestWizardContext _context = new CreateReviewRequestWizardContext();
@@ -46,6 +53,7 @@ public class PostReviewRequestWizard extends Wizard {
 
     private ReviewRequest _reviewRequest;
 
+    //for 1 project
     public PostReviewRequestWizard(IProject project) {
 
         _project = project;
@@ -63,32 +71,56 @@ public class PostReviewRequestWizard extends Wizard {
         setNeedsProgressMonitor(true);
     }
 
+    //for 1 branch
+    public PostReviewRequestWizard(Ref branch, org.eclipse.jgit.lib.Repository repository) {
+    	_branch = branch;
+    	_gitRepository = repository;
+    	setWindowTitle("Create new review request");
+        setDefaultPageImageDescriptor(ReviewboardImages.WIZARD_CREATE_REQUEST);
+        setNeedsProgressMonitor(true);
+    }
     @Override
     public void addPages() {
 
     	try {
-			DetectUncommitedChanges detectUncommited = new DetectUncommitedChanges(_project);
+			DetectUncommitedChanges detectUncommited;
+			
+			if (_project == null) {
+				detectUncommited = new DetectUncommitedChanges(_branch, _gitRepository);
+			} else {
+				detectUncommited = new DetectUncommitedChanges(_project);
+			}
+			
 			Set<String> uncommited = detectUncommited.getUncommited();
-			if (uncommited.size() > 0 && _reviewRequest == null) {
+			if (uncommited.size() > 0) {
 			    addPage(detectUncommited);
 			}
+			if (_project == null) {
+	    		_detectLocalChangesPage = new DetectLocalChangesPage(_branch, _gitRepository, _context, _reviewRequest);
+	    	} else {
+	    		_detectLocalChangesPage = new DetectLocalChangesPage(_project, _context, _reviewRequest);
+	    	}
+	        
+	        addPage(_detectLocalChangesPage);
+	        if ( _reviewRequest == null ) {
+	            _publishReviewRequestPage = new PublishReviewRequestPage(_context, _project, _branch, _gitRepository);
+	            addPage(_publishReviewRequestPage);
+	        } else {
+	            _updateReviewRequestPage = new UpdateReviewRequestPage();
+	            addPage(_updateReviewRequestPage);
+	        }
 		} catch (NoWorkTreeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (GitAPIException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-        _detectLocalChangesPage = new DetectLocalChangesPage(_project, _context, _reviewRequest);
-        addPage(_detectLocalChangesPage);
-        if ( _reviewRequest == null ) {
-            _publishReviewRequestPage = new PublishReviewRequestPage(_context);
-            addPage(_publishReviewRequestPage);
-        } else {
-            _updateReviewRequestPage = new UpdateReviewRequestPage();
-            addPage(_updateReviewRequestPage);
-        }
+    	
     }
     
     @Override
@@ -111,21 +143,34 @@ public class PostReviewRequestWizard extends Wizard {
                         Repository reviewBoardRepository = _detectLocalChangesPage.getReviewBoardRepository();
                         TaskRepository repository = _detectLocalChangesPage.getTaskRepository();
 
-                        GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
-                        
-                    	Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
-                        
-                        GitProjectData data = gitProvider.getData();
+                        org.eclipse.jgit.lib.Repository projectGitResource;
+                        if (_project == null) {
+                        	projectGitResource = _gitRepository;
+                        } else {
+                        	GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
+                            
+                        	Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
+                            
+                            GitProjectData data = gitProvider.getData();
 
-                        RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
+                            RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
+                            
+                            projectGitResource = repositoryMapping.getRepository();
+                        }
                         
-                        org.eclipse.jgit.lib.Repository projectGitResource = repositoryMapping.getRepository();
                         
                         sub = SubMonitor.convert(monitor, "Creating patch", 1);
                         
                         DiffCreator diffCreator = new DiffCreator();
                         
-                        byte[] diffContent = diffCreator.createDiff(_detectLocalChangesPage.getSelectedFiles(), _project.getLocation().toFile(), gitClient);
+                        byte[] diffContent;
+                        if (_project == null) {
+                        	diffContent = diffCreator.createDiff(_detectLocalChangesPage.getSelectedFiles(), projectGitResource.getDirectory(), gitClient);
+                        } else {
+                        	diffContent = diffCreator.createDiff(_detectLocalChangesPage.getSelectedFiles(), _project.getLocation().toFile(), gitClient);
+                        }
+                        
+                         
                         
                         sub.done();
                         
@@ -151,7 +196,7 @@ public class PostReviewRequestWizard extends Wizard {
                         if ( basePath.length() == 0 ) {
                             basePath = "/";
                         }
-
+                        
                         Activator.getDefault().trace(TraceLocation.MAIN, "Detected base path " + basePath);
                         
                         sub = SubMonitor.convert(monitor, "Posting diff patch", 1);
@@ -166,6 +211,21 @@ public class PostReviewRequestWizard extends Wizard {
                         if ( _reviewRequest == null ) {
                             reviewRequestForUpdate = _publishReviewRequestPage.getReviewRequest();
                             reviewRequestForUpdate.setId(reviewRequest.getId());
+                            
+                            RevWalk walk = new RevWalk(projectGitResource);
+                            RevCommit commit = walk.parseCommit(projectGitResource.getRef(projectGitResource.getFullBranch()).getObjectId());
+                            
+                            String commitMessage = commit.getFullMessage();
+                            
+                        	int indexOfReviewURL = commitMessage.indexOf("Review URL:");
+                            String idPart = "/r/" + reviewRequestForUpdate.getId();
+                            String reviewURL = "Review URL: " + repository.getUrl() + idPart;
+                            
+                            if (indexOfReviewURL > -1 && commitMessage.indexOf(idPart) == -1) {
+                            	commitMessage = commitMessage.replace("Review URL:", reviewURL);
+                            }
+                            Git client = new Git(projectGitResource);
+                            RevCommit rev = client.commit().setAmend(true).setAll(true).setMessage(commitMessage).call();
                         } else {
                             reviewRequestForUpdate = _reviewRequest;
                         }
@@ -176,6 +236,7 @@ public class PostReviewRequestWizard extends Wizard {
                         if ( _reviewRequest != null ) {
                             changeDescription = _updateReviewRequestPage.getChangeDescription();
                         }
+                        
                         
                         rbClient.updateReviewRequest(reviewRequestForUpdate, true, changeDescription, monitor);
                         

@@ -16,6 +16,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
@@ -28,6 +29,8 @@ public class DetectUncommitedChanges extends WizardPage{
 
 	private Table _table;
 	private IProject _project;
+	private org.eclipse.jgit.lib.Repository _repository;
+	private Ref _branch;
 	private Set<String> uncommited;
 	
 	public DetectUncommitedChanges(IProject project) throws NoWorkTreeException, GitAPIException {
@@ -38,30 +41,48 @@ public class DetectUncommitedChanges extends WizardPage{
 		uncommited = getUncommitedFiles();
 	}
 	
+	public DetectUncommitedChanges(Ref branch, org.eclipse.jgit.lib.Repository repository) throws NoWorkTreeException, GitAPIException {
+		super("Detecting uncommited files","Detecting uncommited files", null);
+        setMessage("There are files that have not been commited."
+        		, IMessageProvider.INFORMATION);
+		_branch = branch;
+		_repository = repository;
+		uncommited = getUncommitedFiles();
+	}
+	
 	public Set<String> getUncommited() {
 		return uncommited;
 	}
 	
 	private Set<String> getUncommitedFiles() throws NoWorkTreeException, GitAPIException {
 
-		GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
-		Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
-		GitProjectData data = gitProvider.getData();
+		if (_repository == null) {
+			GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
+			Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
+			GitProjectData data = gitProvider.getData();
 
-		RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
+			RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
 
-		org.eclipse.jgit.lib.Repository repository = repositoryMapping.getRepository();
+			_repository = repositoryMapping.getRepository();
 
-		Git client = new Git(repository);
-
-		String projectPath = _project.getFullPath().toString();
-		if (projectPath.startsWith("/")) {
-			projectPath = projectPath.substring(1);
 		}
-		if (!projectPath.endsWith("/")) {
-			projectPath = projectPath + "/";
+		Git client = new Git(_repository);
+
+		Status status;
+		
+		if (_project == null ) {
+			status = client.status().call();
+		} else {
+			String projectPath = _project.getFullPath().toString();
+			if (projectPath.startsWith("/")) {
+				projectPath = projectPath.substring(1);
+			}
+			if (!projectPath.endsWith("/")) {
+				projectPath = projectPath + "/";
+			}
+			status = client.status().addPath(projectPath).call();
 		}
-		Status status = client.status().addPath(projectPath).call();
+		
 
 		return status.getUncommittedChanges();
 	}

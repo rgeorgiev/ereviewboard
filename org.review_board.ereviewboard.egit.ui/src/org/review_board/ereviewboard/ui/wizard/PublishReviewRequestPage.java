@@ -1,12 +1,21 @@
 package org.review_board.ereviewboard.ui.wizard;
 
 
+import java.io.IOException;
 import java.util.Collections;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Assert;
+import org.eclipse.egit.core.GitProvider;
+import org.eclipse.egit.core.project.GitProjectData;
+import org.eclipse.egit.core.project.RepositoryMapping;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.jgit.lib.BranchTrackingStatus;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.mylyn.tasks.core.ITask;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.swt.SWT;
@@ -16,6 +25,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.team.core.RepositoryProvider;
 import org.review_board.ereviewboard.core.model.ReviewRequest;
 import org.review_board.ereviewboard.egit.ui.internal.Activator;
 import org.review_board.ereviewboard.ui.internal.control.EnhancedAutoCompleteField;
@@ -31,16 +41,34 @@ class PublishReviewRequestPage extends WizardPage {
     private EnhancedAutoCompleteField _toUserComboAutoCompleteField;
     private EnhancedAutoCompleteField _toGroupComboAutoCompleteField;
     private final ReviewRequest reviewRequest = new ReviewRequest();
+    private String branchName;
+    
     
     private final CreateReviewRequestWizardContext _context;
 
-    public PublishReviewRequestPage(CreateReviewRequestWizardContext context) {
+    public PublishReviewRequestPage(CreateReviewRequestWizardContext context, IProject project, Ref branch, Repository repository) throws IOException {
 
         super("Publish review request", "Publish review request", null);
         
         setMessage("Fill in the review request details. Description, summary and a target person or a target group are required.", IMessageProvider.INFORMATION);
         
         _context = context;
+        
+        if (project == null) {
+        	branchName = BranchTrackingStatus.of(repository, branch.getName()).getRemoteTrackingBranch();
+        } else {
+        	GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(project);
+            
+        	Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + project);
+            
+            GitProjectData data = gitProvider.getData();
+
+            RepositoryMapping repositoryMapping = data.getRepositoryMapping(project);
+            
+            Repository repo = repositoryMapping.getRepository();
+            branchName = BranchTrackingStatus.of(repo, repo.getFullBranch()).getRemoteTrackingBranch();
+        }
+        branchName = branchName.substring(branchName.lastIndexOf('/') + 1);
     }
 
     public void createControl(Composite parent) {
@@ -82,6 +110,7 @@ class PublishReviewRequestPage extends WizardPage {
         newLabel(layout, "Branch:");
         
         final Text branch = newText(layout);
+        branch.setText(branchName);
         branch.addModifyListener(new ModifyListener() {
             
             public void modifyText(ModifyEvent e) {

@@ -38,7 +38,6 @@ public class ReviewboardNewTaskWizard extends NewTaskWizard {
     @Override
     public void addPages() {
         super.addPages();
-
         addPage(new ReviewboardUnsupportedCreationWizardPage());
     }
 
