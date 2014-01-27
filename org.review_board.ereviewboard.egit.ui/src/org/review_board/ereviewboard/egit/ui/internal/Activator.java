@@ -34,11 +34,9 @@ public class Activator extends Plugin {
 
     private static volatile Activator DEFAULT;
     
-    private IPreferenceStore store;
     public void start(BundleContext context) throws Exception {
 
         super.start(context);
-        store = new ScopedPreferenceStore(InstanceScope.INSTANCE, context.getBundle().getSymbolicName());
         DEFAULT = this;
     }
 
@@ -89,7 +87,4 @@ public class Activator extends Plugin {
         log(severity, message, null);
     }
 
-	public IPreferenceStore getPreferenceStore() {
-		return store;
-	}
 }

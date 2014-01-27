@@ -33,18 +33,11 @@ public class DetectUncommitedChanges extends WizardPage{
 	private Ref _branch;
 	private Set<String> uncommited;
 	
-	public DetectUncommitedChanges(IProject project) throws NoWorkTreeException, GitAPIException {
+	public DetectUncommitedChanges(IProject project, Ref branch, org.eclipse.jgit.lib.Repository repository) throws NoWorkTreeException, GitAPIException {
 		super("Detecting uncommited files","Detecting uncommited files", null);
         setMessage("There are files that have not been commited."
         		, IMessageProvider.INFORMATION);
-		_project = project;
-		uncommited = getUncommitedFiles();
-	}
-	
-	public DetectUncommitedChanges(Ref branch, org.eclipse.jgit.lib.Repository repository) throws NoWorkTreeException, GitAPIException {
-		super("Detecting uncommited files","Detecting uncommited files", null);
-        setMessage("There are files that have not been commited."
-        		, IMessageProvider.INFORMATION);
+        _project = project;
 		_branch = branch;
 		_repository = repository;
 		uncommited = getUncommitedFiles();
@@ -88,6 +81,7 @@ public class DetectUncommitedChanges extends WizardPage{
 	}
 
 	public void createControl(Composite parent) {
+		
 		Composite layout = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.swtDefaults().applyTo(layout);
 

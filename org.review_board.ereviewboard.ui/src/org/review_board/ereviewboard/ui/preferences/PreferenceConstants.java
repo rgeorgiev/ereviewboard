@@ -1,4 +1,4 @@
-package org.review_board.ereviewboard.egit.ui.preferences;
+package org.review_board.ereviewboard.ui.preferences;
 
 /**
  * Constant definitions for plug-in preferences

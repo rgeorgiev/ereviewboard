@@ -16,6 +16,8 @@ import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.mylyn.tasks.core.ITask;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.swt.SWT;
@@ -28,6 +30,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.team.core.RepositoryProvider;
 import org.review_board.ereviewboard.core.model.ReviewRequest;
 import org.review_board.ereviewboard.egit.ui.internal.Activator;
+import org.review_board.ereviewboard.ui.ReviewboardUiPlugin;
 import org.review_board.ereviewboard.ui.internal.control.EnhancedAutoCompleteField;
 import org.review_board.ereviewboard.ui.internal.control.Proposal;
 import org.review_board.ereviewboard.ui.util.UiUtils;
@@ -42,7 +45,8 @@ class PublishReviewRequestPage extends WizardPage {
     private EnhancedAutoCompleteField _toGroupComboAutoCompleteField;
     private final ReviewRequest reviewRequest = new ReviewRequest();
     private String branchName;
-    
+    private String commitFirstLine = "";
+    private String commitDescription = "";
     
     private final CreateReviewRequestWizardContext _context;
 
@@ -56,6 +60,10 @@ class PublishReviewRequestPage extends WizardPage {
         
         if (project == null) {
         	branchName = BranchTrackingStatus.of(repository, branch.getName()).getRemoteTrackingBranch();
+        	RevWalk walk = new RevWalk(repository);
+            RevCommit commit = walk.parseCommit(branch.getObjectId());
+        	commitFirstLine = commit.getShortMessage();
+        	commitDescription = commit.getFullMessage().substring(commitFirstLine.length()).trim();
         } else {
         	GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(project);
             
@@ -67,6 +75,11 @@ class PublishReviewRequestPage extends WizardPage {
             
             Repository repo = repositoryMapping.getRepository();
             branchName = BranchTrackingStatus.of(repo, repo.getFullBranch()).getRemoteTrackingBranch();
+            RevWalk walk = new RevWalk(repo);
+            RevCommit commit = walk.parseCommit(repo.getRef(repo.getFullBranch()).getObjectId());
+            commitFirstLine = commit.getShortMessage();
+        	commitDescription = commit.getFullMessage().substring(commitFirstLine.length()).trim();
+            
         }
         branchName = branchName.substring(branchName.lastIndexOf('/') + 1);
     }
@@ -78,8 +91,12 @@ class PublishReviewRequestPage extends WizardPage {
         GridLayoutFactory.fillDefaults().numColumns(2).applyTo(layout);
         
         newLabel(layout, "Summary:");
-        
+
         final StyledText summary = UiUtils.newSinglelineText(layout);
+        if (ReviewboardUiPlugin.getDefault().getPreferenceStore().getBoolean("guessSummary")) {
+        	summary.setText(commitFirstLine);
+        	reviewRequest.setSummary(summary.getText());
+        }
         summary.addModifyListener(new ModifyListener() {
             
             public void modifyText(ModifyEvent e) {
@@ -111,6 +128,8 @@ class PublishReviewRequestPage extends WizardPage {
         
         final Text branch = newText(layout);
         branch.setText(branchName);
+        reviewRequest.setBranch(branch.getText());
+        
         branch.addModifyListener(new ModifyListener() {
             
             public void modifyText(ModifyEvent e) {
@@ -124,7 +143,10 @@ class PublishReviewRequestPage extends WizardPage {
         newLabel(layout, "Description:");
         
         final StyledText description = UiUtils.newMultilineText(layout);
-        
+        if (ReviewboardUiPlugin.getDefault().getPreferenceStore().getBoolean("guessDescription")) {
+        	description.setText(commitDescription);
+        	reviewRequest.setDescription(description.getText());
+        }
         description.addModifyListener(new ModifyListener() {
             
             public void modifyText(ModifyEvent e) {
@@ -154,7 +176,7 @@ class PublishReviewRequestPage extends WizardPage {
         final Text toUserText = newText(layout);
         
         _toUserComboAutoCompleteField = new EnhancedAutoCompleteField(toUserText, new Proposal[0]);
-        String targetUser = Activator.getDefault().getPreferenceStore().getString("targetUser");
+        String targetUser = ReviewboardUiPlugin.getDefault().getPreferenceStore().getString("targetUser");
         if (!targetUser.equals("")) {
         	toUserText.setText(targetUser);
         	reviewRequest.setTargetPeople(Collections.singletonList(toUserText.getText()));
@@ -176,7 +198,7 @@ class PublishReviewRequestPage extends WizardPage {
         final Text toGroupText = newText(layout);
         
         _toGroupComboAutoCompleteField = new EnhancedAutoCompleteField(toGroupText, new Proposal[0]);
-        String targetGroup = Activator.getDefault().getPreferenceStore().getString("targetGroup");
+        String targetGroup = ReviewboardUiPlugin.getDefault().getPreferenceStore().getString("targetGroup");
         if (!targetGroup.equals("")) {
         	toUserText.setText(targetGroup);
         	reviewRequest.setTargetGroups(Collections.singletonList(toGroupText.getText()));

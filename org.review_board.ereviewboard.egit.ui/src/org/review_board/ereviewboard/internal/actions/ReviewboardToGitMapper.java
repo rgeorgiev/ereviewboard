@@ -1,7 +1,6 @@
 package org.review_board.ereviewboard.internal.actions;
 
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +44,6 @@ public class ReviewboardToGitMapper {
             
             //the local git repository for the project
             org.eclipse.jgit.lib.Repository projectGitResource = repositoryMapping.getRepository();
-            
             
             String gitRepositoryName = projectGitResource.getWorkTree().getName();
 

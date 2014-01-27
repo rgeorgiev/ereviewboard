@@ -1,10 +1,7 @@
 package org.review_board.ereviewboard.ui.wizard;
 
 
-import java.io.File;
-
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.lib.IndexDiff;
 
 
 /**

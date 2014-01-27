@@ -166,8 +166,6 @@ public class ReviewboardDiffPart extends AbstractTaskEditorPart {
                 
                 ReviewUi.setActiveReview(new ReviewboardReviewBehaviour(getTaskEditorPage().getTask(), item, diffRevision, getClient(), listener));
                 
-                
-                //was SCMFileContentsLocator locator = getSCMFileContentsLocator(taskMapper, item.getBase());
                 SCMFileContentsLocator locator = getSCMFileContentsLocator(taskMapper, item.getBase());
                 if ( locator == null ) {
                     MessageDialog.openWarning(null, "Unable to load base file", "Unable to load base file contents since no plug-in was able to handle the repository " + taskMapper.getRepository());

@@ -38,8 +38,11 @@
 package org.review_board.ereviewboard.ui;
 
 import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.mylyn.tasks.ui.TaskRepositoryLocationUiFactory;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.osgi.framework.BundleContext;
 import org.review_board.ereviewboard.core.ReviewboardCorePlugin;
 
@@ -50,7 +53,8 @@ import org.review_board.ereviewboard.core.ReviewboardCorePlugin;
 public class ReviewboardUiPlugin extends Plugin {
 
     public static final String PLUGIN_ID = "org.review_board.ereviewboard.ui";
-
+    private IPreferenceStore store;
+    
     private static volatile ReviewboardUiPlugin DEFAULT;
 
     public void start(BundleContext context) throws Exception {
@@ -61,7 +65,7 @@ public class ReviewboardUiPlugin extends Plugin {
         corePlugin.getConnector().setTaskRepositoryLocationFactory(
                 new TaskRepositoryLocationUiFactory());
         TasksUi.getRepositoryManager().addListener(corePlugin.getConnector().getClientManager());
-        
+        store = new ScopedPreferenceStore(InstanceScope.INSTANCE, context.getBundle().getSymbolicName());
         DEFAULT = this;
     }
     
@@ -74,6 +78,11 @@ public class ReviewboardUiPlugin extends Plugin {
     public static ReviewboardUiPlugin getDefault() {
         
         return DEFAULT;
+    }
+
+    public IPreferenceStore getPreferenceStore() {
+        // TODO Auto-generated method stub
+        return store;
     }
 
 }

@@ -48,8 +48,10 @@ public class EGitSCMFileContentsLocator implements SCMFileContentsLocator {
 
     public byte[] getContents(IProgressMonitor monitor) throws CoreException {
         
-        if ( revision == null )
-            return new byte[0];
+        if ( revision == null ) {
+        	return new byte[0];
+        }
+
         
         for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
 

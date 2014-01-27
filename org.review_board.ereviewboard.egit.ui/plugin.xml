@@ -34,20 +34,6 @@
       </taskDiffAction>
    </extension>
    <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
-            class="org.review_board.ereviewboard.egit.ui.preferences.ReviewRequestPreferencePage"
-            id="org.review_board.ereviewboard.egit.ui.preferences.ReviewRequestPreferencePage"
-            name="Review Request">
-      </page>
-   </extension>
-   <extension
-         point="org.eclipse.core.runtime.preferences">
-      <initializer
-            class="org.review_board.ereviewboard.egit.ui.preferences.PreferenceInitializer">
-      </initializer>
-   </extension>
-   <extension
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="true"

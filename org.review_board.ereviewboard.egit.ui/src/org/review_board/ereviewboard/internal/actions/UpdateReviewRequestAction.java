@@ -1,12 +1,22 @@
 package org.review_board.ereviewboard.internal.actions;
 
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.egit.core.GitProvider;
+import org.eclipse.egit.core.project.GitProjectData;
+import org.eclipse.egit.core.project.RepositoryMapping;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
+import org.eclipse.team.core.RepositoryProvider;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -28,14 +38,14 @@ import org.review_board.ereviewboard.ui.editor.ext.TaskDiffAction;
  */
 public class UpdateReviewRequestAction implements TaskDiffAction {
 
-    private ReviewboardToGitMapper reviewboardToGitMapper = new ReviewboardToGitMapper();
     private TaskRepository repository;
     private int reviewRequestId;
     private Repository codeRepository;
     private Integer diffRevisionId;
     private ReviewboardDiffMapper diffMapper;
 
-    public void init(TaskRepository repository, int reviewRequestId, Repository codeRepository, ReviewboardDiffMapper diffMapper, Integer diffRevisionId) {
+    public void init(TaskRepository repository, int reviewRequestId, Repository codeRepository,
+    		ReviewboardDiffMapper diffMapper, Integer diffRevisionId) {
         
         this.repository = repository;
         this.reviewRequestId = reviewRequestId;
@@ -62,12 +72,36 @@ public class UpdateReviewRequestAction implements TaskDiffAction {
             ReviewboardRepositoryConnector connector = ReviewboardCorePlugin.getDefault().getConnector();
             
             ReviewboardClient client = connector.getClientManager().getClient(repository);
+                        
+            IWorkspace workspace = ResourcesPlugin.getWorkspace();
+
+            List<IProject> matchingProjects = new ArrayList<IProject>();
+            org.eclipse.jgit.lib.Repository repo = null;
+            for (IProject project : workspace.getRoot().getProjects()) {
+
+                GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(project);
+
+                if (gitProvider == null)
+                    continue;
+
+                GitProjectData data = gitProvider.getData();
+
+                RepositoryMapping repositoryMapping = data.getRepositoryMapping(project);
+
+                org.eclipse.jgit.lib.Repository projectGitResource = repositoryMapping.getRepository();
+                
+                String gitRepositoryName = projectGitResource.getWorkTree().getName();
+
+                if (codeRepository.getName().equals(gitRepositoryName)) {
+                	matchingProjects.add(project);
+                	repo = projectGitResource;
+                }
+            }
             
-            IProject matchingProject = reviewboardToGitMapper.findProjectForRepository(codeRepository, repository, diffMapper);
             
-            Activator.getDefault().trace(TraceLocation.MAIN, "Matched review request with id " + reviewRequestId + " with project " + matchingProject);
+            Activator.getDefault().trace(TraceLocation.MAIN, "Matched review request with id " + reviewRequestId + " with project " + matchingProjects);
             
-            if ( matchingProject == null )
+            if (matchingProjects.size() == 0 || repo == null)
                 return new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Could not find a matching project for the resources in the review request.");
             
             ReviewRequest reviewRequest = client.getReviewRequest(reviewRequestId, monitor);
@@ -76,12 +110,18 @@ public class UpdateReviewRequestAction implements TaskDiffAction {
             
             IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
             
-            new WizardDialog(win.getShell(), new PostReviewRequestWizard(matchingProject, reviewRequest)).open();
+            if (matchingProjects.size() == 1) {
+            	new WizardDialog(win.getShell(), new PostReviewRequestWizard(matchingProjects.get(0), reviewRequest)).open();
+            } else {
+            	new WizardDialog(win.getShell(), new PostReviewRequestWizard(repo.getRef(repo.getBranch()), repo, reviewRequest)).open();
+            }
 
             return Status.OK_STATUS;
         } catch (ReviewboardException e) {
             return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed updating the diff : " + e.getMessage(), e);
-        } finally {
+        } catch (IOException e) {
+        	return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed updating the diff : " + e.getMessage(), e);
+		} finally {
             monitor.done();
         }
     }

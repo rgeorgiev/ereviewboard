@@ -43,19 +43,44 @@ import java.net.URL;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jface.dialogs.ControlAnimator;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.ui.TasksUi;
 import org.eclipse.mylyn.tasks.ui.wizards.AbstractRepositorySettingsPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.forms.widgets.ExpandableComposite;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.review_board.ereviewboard.core.ReviewboardCorePlugin;
 import org.review_board.ereviewboard.core.ReviewboardRepositoryConnector;
 import org.review_board.ereviewboard.core.ReviewboardRepositoryMapper;
 import org.review_board.ereviewboard.core.client.ReviewboardClient;
+import org.review_board.ereviewboard.ui.ReviewboardUiPlugin;
+import org.review_board.ereviewboard.ui.internal.control.EnhancedAutoCompleteField;
+import org.review_board.ereviewboard.ui.internal.control.Proposal;
 import org.review_board.ereviewboard.ui.util.UiUtils;
 
 /**
@@ -71,7 +96,8 @@ public class ReviewboardRepositorySettingsPage extends AbstractRepositorySetting
     private String checkedUrl = null;
 
     private boolean authenticated;
-
+    private boolean additionalSettings;
+    
     private String username = "";
     private String password = "";
 
@@ -88,17 +114,13 @@ public class ReviewboardRepositorySettingsPage extends AbstractRepositorySetting
 
     @Override
     public void createControl(Composite parent) {
+
         super.createControl(parent);
-        
-        Composite control = getControl().getParent();
-        
-        GridLayoutFactory.swtDefaults().applyTo(control);
-        
-        Label descriptionLabel = new Label(control, SWT.NONE );
-        descriptionLabel.setText("Test");
-        setControl(control);
-        
+
+        createDefaultSettings(super.compositeContainer);
+
         checkedUrl = getRepositoryUrl();
+     
     }
     
     @Override
@@ -174,16 +196,76 @@ public class ReviewboardRepositorySettingsPage extends AbstractRepositorySetting
         return false;
     }
     
-    private void newLabel(Composite layout, String text) {
-
-        Label descriptionLabel = new Label(layout, SWT.NONE );
-        descriptionLabel.setText(text);
-        GridDataFactory.swtDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(descriptionLabel);
-    }
-    private Text newText(Composite layout) {
+    
+    
+    void createDefaultSettings(Composite c) {
+        Composite control = c;
         
-        final Text toUserText = new Text(layout, SWT.BORDER | SWT.SINGLE);
-        GridDataFactory.swtDefaults().hint(UiUtils.FULL_TEXT_WIDTH, SWT.DEFAULT).applyTo(toUserText);
-        return toUserText;
+        GridLayout layout = new GridLayout(3, false);
+        control.setLayout(layout);
+        control.setLayoutData(new GridData(SWT.LEFT, SWT.BEGINNING, false, false, 2, 1));
+        
+        Label textLabel = new Label(control, SWT.NONE);
+        textLabel.setText("Optional default settings: ");
+        GridDataFactory.swtDefaults().span(3, SWT.DEFAULT).applyTo(textLabel);
+        
+        Label targetUserLabel = new Label(control, SWT.NONE);
+        targetUserLabel.setText("Target user:");
+        
+        final Text targetUser = new Text(control, SWT.NONE);
+        GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).grab(true, false).span(2, SWT.DEFAULT).applyTo(targetUser);
+        targetUser.setText(ReviewboardUiPlugin.getDefault().getPreferenceStore().getString("targetUser"));
+        targetUser.addModifyListener(new ModifyListener() {
+            
+            public void modifyText(ModifyEvent e) {
+                ReviewboardUiPlugin.getDefault().getPreferenceStore().setDefault("targetUser", targetUser.getText());
+                    
+                getContainer().updateButtons();
+                
+            }
+        });
+        
+        Label targetGroupLabel = new Label(control, SWT.NONE);
+        targetGroupLabel.setText("Target group:");
+
+        final Text targetGroup = new Text(control, SWT.NONE);
+        targetGroup.setText(ReviewboardUiPlugin.getDefault().getPreferenceStore().getString("targetGroup"));
+        GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).grab(true, false).span(2, SWT.DEFAULT).applyTo(targetGroup);
+        targetGroup.addModifyListener(new ModifyListener() {
+            
+            public void modifyText(ModifyEvent e) {
+                ReviewboardUiPlugin.getDefault().getPreferenceStore().setDefault("targetGroup", targetGroup.getText());
+                    
+                getContainer().updateButtons();
+                
+            }
+        });
+        
+        final Button guessSummary = new Button(control, SWT.CHECK);
+        guessSummary.setText("Guess Summary");
+        guessSummary.setSelection(ReviewboardUiPlugin.getDefault().getPreferenceStore().getBoolean("guessSummary"));
+        guessSummary.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                
+                ReviewboardUiPlugin.getDefault().getPreferenceStore().setValue("guessSummary", guessSummary.getSelection());
+                getContainer().updateButtons();
+            }
+
+        });
+        
+        
+        final Button guessDescription = new Button(control, SWT.CHECK);
+        guessDescription.setText("Guess Description");
+        guessDescription.setSelection(ReviewboardUiPlugin.getDefault().getPreferenceStore().getBoolean("guessDescription"));
+        guessDescription.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                ReviewboardUiPlugin.getDefault().getPreferenceStore().setValue("guessDescription", guessDescription.getSelection());
+                getContainer().updateButtons();
+            }
+        });
     }
+    
+    
 }

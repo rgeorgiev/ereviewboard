@@ -40,4 +40,18 @@
                label="Discard Review draft..."
                class="org.review_board.ereviewboard.internal.actions.DiscardReviewAction"/>
 	</extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="org.review_board.ereviewboard.ui.preferences.ReviewRequestPage"
+            id="org.review_board.ereviewboard.ui.preferences.ReviewRequestPage"
+            name="Review Request">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.review_board.ereviewboard.ui.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
 </plugin>

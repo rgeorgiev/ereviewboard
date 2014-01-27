@@ -2,13 +2,17 @@ package org.review_board.ereviewboard.ui.wizard;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.egit.core.GitProvider;
 import org.eclipse.egit.core.project.GitProjectData;
 import org.eclipse.egit.core.project.RepositoryMapping;
@@ -17,7 +21,12 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.api.errors.NoMessageException;
+import org.eclipse.jgit.api.errors.UnmergedPathsException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.patch.Patch;
@@ -70,6 +79,15 @@ public class PostReviewRequestWizard extends Wizard {
         setDefaultPageImageDescriptor(ReviewboardImages.WIZARD_CREATE_REQUEST);
         setNeedsProgressMonitor(true);
     }
+    public PostReviewRequestWizard(Ref branch, org.eclipse.jgit.lib.Repository repository, ReviewRequest reviewRequest) {
+        
+    	_branch = branch;
+    	_gitRepository = repository;
+    	_reviewRequest = reviewRequest;
+        setWindowTitle("Update review request");
+        setDefaultPageImageDescriptor(ReviewboardImages.WIZARD_CREATE_REQUEST);
+        setNeedsProgressMonitor(true);
+    }
 
     //for 1 branch
     public PostReviewRequestWizard(Ref branch, org.eclipse.jgit.lib.Repository repository) {
@@ -83,25 +101,16 @@ public class PostReviewRequestWizard extends Wizard {
     public void addPages() {
 
     	try {
-			DetectUncommitedChanges detectUncommited;
-			
-			if (_project == null) {
-				detectUncommited = new DetectUncommitedChanges(_branch, _gitRepository);
-			} else {
-				detectUncommited = new DetectUncommitedChanges(_project);
-			}
-			
+			DetectUncommitedChanges detectUncommited = new DetectUncommitedChanges(_project, _branch, _gitRepository);
+
 			Set<String> uncommited = detectUncommited.getUncommited();
 			if (uncommited.size() > 0) {
 			    addPage(detectUncommited);
 			}
-			if (_project == null) {
-	    		_detectLocalChangesPage = new DetectLocalChangesPage(_branch, _gitRepository, _context, _reviewRequest);
-	    	} else {
-	    		_detectLocalChangesPage = new DetectLocalChangesPage(_project, _context, _reviewRequest);
-	    	}
-	        
+			
+	    	_detectLocalChangesPage = new DetectLocalChangesPage(_project, _branch, _gitRepository, _context, _reviewRequest);
 	        addPage(_detectLocalChangesPage);
+	        
 	        if ( _reviewRequest == null ) {
 	            _publishReviewRequestPage = new PublishReviewRequestPage(_context, _project, _branch, _gitRepository);
 	            addPage(_publishReviewRequestPage);
@@ -131,7 +140,7 @@ public class PostReviewRequestWizard extends Wizard {
 
                 public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
                     
-                    monitor.beginTask("Posting review request", 4);
+                    monitor.beginTask("Posting review request", 5);
 
                     SubMonitor sub;
                     
@@ -170,8 +179,6 @@ public class PostReviewRequestWizard extends Wizard {
                         	diffContent = diffCreator.createDiff(_detectLocalChangesPage.getSelectedFiles(), _project.getLocation().toFile(), gitClient);
                         }
                         
-                         
-                        
                         sub.done();
                         
                         ReviewRequest reviewRequest;
@@ -188,9 +195,6 @@ public class PostReviewRequestWizard extends Wizard {
                             reviewRequest = _reviewRequest;
                         }
 
-                        //url - the whole name: repository root/this, repository root - aka head
-//                        String basePath = projectSvnResource.getUrl().toString()
-//                                .substring(svnRepository.getRepositoryRoot().toString().length());
                         String basePath = projectGitResource.getIndexFile().toString()
                                 .substring(gitRepository.getIndexFile().toString().length());
                         if ( basePath.length() == 0 ) {
@@ -208,24 +212,56 @@ public class PostReviewRequestWizard extends Wizard {
                         Activator.getDefault().trace(TraceLocation.MAIN, "Diff created.");
 
                         ReviewRequest reviewRequestForUpdate;
+                        
                         if ( _reviewRequest == null ) {
+                        	
+                        	//sub = SubMonitor.convert(monitor, "Amending commit message", 1);
+                        	
                             reviewRequestForUpdate = _publishReviewRequestPage.getReviewRequest();
                             reviewRequestForUpdate.setId(reviewRequest.getId());
                             
                             RevWalk walk = new RevWalk(projectGitResource);
                             RevCommit commit = walk.parseCommit(projectGitResource.getRef(projectGitResource.getFullBranch()).getObjectId());
-                            
                             String commitMessage = commit.getFullMessage();
                             
-                        	int indexOfReviewURL = commitMessage.indexOf("Review URL:");
                             String idPart = "/r/" + reviewRequestForUpdate.getId();
                             String reviewURL = "Review URL: " + repository.getUrl() + idPart;
                             
-                            if (indexOfReviewURL > -1 && commitMessage.indexOf(idPart) == -1) {
-                            	commitMessage = commitMessage.replace("Review URL:", reviewURL);
-                            }
-                            Git client = new Git(projectGitResource);
-                            RevCommit rev = client.commit().setAmend(true).setAll(true).setMessage(commitMessage).call();
+                            commitMessage = commitMessage.concat("\n"+reviewURL);
+                            
+                            final CommitCommand command = gitClient.commit().setAmend(true).setAll(true).setMessage(commitMessage);
+                            Job commitJob = new Job("Amending commit message") {
+								
+								@Override
+								protected IStatus run(IProgressMonitor monitor) {
+									try {
+										command.call();
+									} catch (NoHeadException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									} catch (NoMessageException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									} catch (UnmergedPathsException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									} catch (ConcurrentRefUpdateException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									} catch (WrongRepositoryStateException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									} catch (GitAPIException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+									return Status.OK_STATUS;
+								}
+							};
+                            commitJob.setProgressGroup(monitor, 1);
+                            commitJob.schedule();
+                           // sub.done();
+                            Activator.getDefault().trace(TraceLocation.MAIN, "Commit ammended");
                         } else {
                             reviewRequestForUpdate = _reviewRequest;
                         }
@@ -238,10 +274,10 @@ public class PostReviewRequestWizard extends Wizard {
                         }
                         
                         
-                        rbClient.updateReviewRequest(reviewRequestForUpdate, true, changeDescription, monitor);
+                        rbClient.updateReviewRequest(reviewRequestForUpdate, false, changeDescription, monitor);
                         
                         sub.done();
-
+                        
                         TasksUiUtil.openTask(repository, String.valueOf(reviewRequest.getId()));
                     } catch (IOException e) {
                         throw new InvocationTargetException(e);

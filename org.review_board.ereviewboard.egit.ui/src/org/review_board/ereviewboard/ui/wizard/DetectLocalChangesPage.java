@@ -1,13 +1,10 @@
 package org.review_board.ereviewboard.ui.wizard;
 
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
-import java.rmi.Remote;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,12 +23,10 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
@@ -49,8 +44,6 @@ import org.review_board.ereviewboard.core.model.ReviewRequest;
 import org.review_board.ereviewboard.egit.ui.internal.Activator;
 import org.review_board.ereviewboard.egit.ui.internal.TraceLocation;
 import org.eclipse.egit.core.GitProvider;
-import org.eclipse.egit.core.RepositoryCache;
-import org.eclipse.egit.core.RepositoryUtil;
 import org.eclipse.egit.core.project.GitProjectData;
 import org.eclipse.egit.core.project.RepositoryMapping;
 
@@ -64,9 +57,9 @@ import org.eclipse.egit.core.project.RepositoryMapping;
  */
 class DetectLocalChangesPage extends WizardPage {
 
-    private IProject _project;
+    private final IProject _project;
     private Ref _branch;
-    private Table _table;
+    private  Table _table;
     private final Set<ChangedFile> _selectedFiles = new HashSet<ChangedFile>();
     
     private org.eclipse.jgit.lib.Repository gitRepository;
@@ -78,21 +71,15 @@ class DetectLocalChangesPage extends WizardPage {
     private boolean _alreadyPopulated;
     private final ReviewRequest _reviewRequest;
 
-    public DetectLocalChangesPage(IProject project, CreateReviewRequestWizardContext context, ReviewRequest reviewRequest) {
+
+    public DetectLocalChangesPage(IProject project, Ref branch,
+    		org.eclipse.jgit.lib.Repository repository, CreateReviewRequestWizardContext context, ReviewRequest reviewRequest) {
 
         super("Detect local changes", "Detect local changes", null);
         
-        setMessage("Select the changes to submit for review. The ReviewBoard instance and the Git repository have been auto-detected.", IMessageProvider.INFORMATION);
+        setMessage("Select the changes to submit for review. The ReviewBoard instance and the Git repository have been auto-detected.",
+        		IMessageProvider.INFORMATION);
         _project = project;
-        _context = context;
-        _reviewRequest = reviewRequest;
-    }
-
-    public DetectLocalChangesPage(Ref branch, org.eclipse.jgit.lib.Repository repository, CreateReviewRequestWizardContext context, ReviewRequest reviewRequest) {
-
-        super("Detect local changes", "Detect local changes", null);
-        
-        setMessage("Select the changes to submit for review. The ReviewBoard instance and the Git repository have been auto-detected.", IMessageProvider.INFORMATION);
         _branch = branch;
         gitRepository = repository;
         _context = context;
@@ -301,10 +288,6 @@ class DetectLocalChangesPage extends WizardPage {
                     		return;
                     	}
 
-                    
-                        //LocalResourceStatus status = projectSvnResource.getStatus();
-                        //Activator.getDefault().trace(TraceLocation.MAIN, "Git repository status is " + status);
-                        //Assert.isNotNull(status, "No status for resource " + projectGitResourse.toString());
                     	 ChangedFileFinder changedFileFinder;
                         if (_project == null) {
                         	changedFileFinder = new ChangedFileFinder(getGitRepository(), _branch);

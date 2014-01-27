@@ -76,13 +76,10 @@ public class DiffCreator {
     	diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
     	diffFormatter.setAbbreviationLength(INDEX_LENGTH);
     	diffFormatter.setDetectRenames(true);
-    	
-
 
     	diffFormatter.format(changes);
     	diffFormatter.flush();
 				
-		//System.out.println(outputStream.toString("UTF-8"));
     	return outputStream.toByteArray();
     }
     
