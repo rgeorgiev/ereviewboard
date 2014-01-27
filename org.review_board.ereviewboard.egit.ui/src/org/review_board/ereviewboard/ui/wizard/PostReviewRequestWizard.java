@@ -2,11 +2,9 @@ package org.review_board.ereviewboard.ui.wizard;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -29,7 +27,6 @@ import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.patch.Patch;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
@@ -39,7 +36,6 @@ import org.review_board.ereviewboard.core.client.ReviewboardClient;
 import org.review_board.ereviewboard.core.exception.ReviewboardException;
 import org.review_board.ereviewboard.core.model.Repository;
 import org.review_board.ereviewboard.core.model.ReviewRequest;
-import org.review_board.ereviewboard.core.model.ReviewRequestDraft;
 import org.review_board.ereviewboard.egit.ui.internal.Activator;
 import org.review_board.ereviewboard.egit.ui.internal.TraceLocation;
 import org.review_board.ereviewboard.ui.util.ReviewboardImages;

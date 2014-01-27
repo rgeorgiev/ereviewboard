@@ -7,7 +7,6 @@ import java.util.List;
 import org.eclipse.compare.CompareConfiguration;
 import org.eclipse.compare.patch.ApplyPatchOperation;
 import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
@@ -20,7 +19,6 @@ import org.eclipse.egit.core.project.GitProjectData;
 import org.eclipse.egit.core.project.RepositoryMapping;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.team.core.RepositoryProvider;
-import org.eclipse.ui.IWorkbench;
 import org.review_board.ereviewboard.core.ReviewboardCorePlugin;
 import org.review_board.ereviewboard.core.ReviewboardDiffMapper;
 import org.review_board.ereviewboard.core.ReviewboardRepositoryConnector;
@@ -38,7 +36,6 @@ import org.review_board.ereviewboard.ui.editor.ext.TaskDiffAction;
  */
 public class ApplyDiffAction implements TaskDiffAction {
 
-	//private ReviewboardToGitMapper reviewboardToGitMapper = new ReviewboardToGitMapper();
     private TaskRepository repository;
     private int reviewRequestId;
     private Repository codeRepository;
@@ -126,32 +123,7 @@ public class ApplyDiffAction implements TaskDiffAction {
             applyPatch.openWizard();
 
             return Status.OK_STATUS;
-            
-            
-            
-//            ReviewboardRepositoryConnector connector = ReviewboardCorePlugin.getDefault().getConnector();
-//            
-//            ReviewboardClient client = connector.getClientManager().getClient(repository);
-//            
-//            
-//            IProject matchingProject = reviewboardToGitMapper.findProjectForRepository(codeRepository, repository, diffMapper);
-//            
-//            Activator.getDefault().trace(TraceLocation.MAIN, "Matched review request with id " + reviewRequestId + " with project " + matchingProject);
-//            
-//           if ( matchingProject == null )
-//                return new Status(IStatus.WARNING, Activator.PLUGIN_ID, "Could not find a matching project for the resources in the review request.");
-//            
-//            byte[] rawDiff = client.getRawDiff(reviewRequestId, diffRevisionId, monitor);
-//            monitor.worked(1);
-//            
-//            ByteArrayStorage storage = new ByteArrayStorage(rawDiff);
-//            
-//            ApplyPatchOperation applyPatch = new ApplyPatchOperation(null, storage, matchingProject, new CompareConfiguration());
-//           
-//            
-//            applyPatch.openWizard();
-//
-//            return Status.OK_STATUS;
+
             
         } catch (ReviewboardException e) {
             return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed updating the diff : " + e.getMessage(), e);

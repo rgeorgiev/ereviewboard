@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.team.core.RepositoryProvider;
 import org.review_board.ereviewboard.core.model.ReviewRequest;
-import org.review_board.ereviewboard.egit.ui.internal.Activator;
 import org.review_board.ereviewboard.ui.ReviewboardUiPlugin;
 import org.review_board.ereviewboard.ui.internal.control.EnhancedAutoCompleteField;
 import org.review_board.ereviewboard.ui.internal.control.Proposal;
