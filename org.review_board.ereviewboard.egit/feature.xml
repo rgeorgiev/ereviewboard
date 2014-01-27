@@ -111,20 +111,12 @@ Inc. in the United States, other countries, or both.
       <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.team.core"/>
       <import plugin="org.review_board.ereviewboard.core"/>
-      <import plugin="org.eclipse.jgit" version="3.2.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.egit.core" version="3.2.0" match="greaterOrEqual"/>
       <import plugin="org.apache.commons.io" version="1.4.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.compare"/>
       <import plugin="org.eclipse.mylyn.tasks.core" version="3.6.0" match="compatible"/>
       <import plugin="org.eclipse.mylyn.tasks.ui" version="3.6.0" match="compatible"/>
       <import plugin="org.review_board.ereviewboard.ui"/>
-      <import plugin="org.eclipse.mylyn.reviews.core" version="2.0.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.mylyn.reviews.ui" version="2.0.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.forms" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jface.text" version="3.8.101" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.editors" version="3.8.100" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.egit.ui" version="3.2.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin

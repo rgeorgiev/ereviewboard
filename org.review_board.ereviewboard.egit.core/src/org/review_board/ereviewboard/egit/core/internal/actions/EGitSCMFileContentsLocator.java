@@ -31,13 +31,11 @@ public class EGitSCMFileContentsLocator implements SCMFileContentsLocator {
 
     private Repository codeRepository;
     private String revision;
-    private String filePath;
 
     public void init(Repository codeRepository, String filePath, String revision) {
 
         this.codeRepository = codeRepository;
         this.revision = revision;
-        this.filePath = filePath;
     }
 
     public boolean isEnabled() {
