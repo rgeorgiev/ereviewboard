@@ -46,6 +46,7 @@
 				<goals>
 					<goal>attach-artifact</goal>
 				</goals>
+				<inherited>false</inherited>
 				<configuration>
 					<artifacts>
 						<artifact>
