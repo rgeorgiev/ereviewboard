@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="ereviewboard" sequenceNumber="59">
+<?pde version="3.8"?><target name="ereviewboard" sequenceNumber="65">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.cvs.feature.group" version="1.2.1.r362_v20101111-7B77FKv99HL0GvIAF99I8H14B7E"/>
-<unit id="org.eclipse.emf.sdk.feature.group" version="2.6.1.v20100914-1218"/>
-<repository location="http://download.eclipse.org/releases/helios/"/>
+<unit id="org.tmatesoft.svnkit.feature.group" version="1.7.9.r9659_v20130411_2103"/>
+<unit id="org.tigris.subversion.clientadapter.feature.feature.group" version="1.8.6"/>
+<unit id="org.tigris.subversion.subclipse.feature.group" version="1.8.22"/>
+<unit id="org.tigris.subversion.clientadapter.svnkit.feature.feature.group" version="1.7.9.2"/>
+<repository location="http://subclipse.tigris.org/update_1.8.x"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.egit.feature.group" version="1.0.0.201106090707-r"/>
-<unit id="org.eclipse.jgit.feature.group" version="1.0.0.201106090707-r"/>
-<repository location="http://download.eclipse.org/egit/updates-1.0"/>
+<unit id="org.eclipse.cvs.feature.group" version="1.4.0.v20130911-1000"/>
+<unit id="org.eclipse.emf.compare.source.feature.group" version="2.1.1.201309031318"/>
+<repository location="http://download.eclipse.org/releases/kepler/"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.mylyn_feature.feature.group" version="3.7.0.v20120319-0200"/>
-<unit id="org.eclipse.mylyn.commons.feature.group" version="3.7.0.v20120319-0200"/>
-<unit id="org.eclipse.mylyn.reviews.feature.feature.group" version="0.9.0.v20120319-0200"/>
-<repository location="http://archive.eclipse.org/mylyn/drops/3.7.0/v20120319-0200"/>
+<unit id="org.eclipse.egit.feature.group" version="3.2.0.201312181205-r"/>
+<unit id="org.eclipse.jgit.feature.group" version="3.2.0.201312181205-r"/>
+<repository location="http://download.eclipse.org/egit/updates"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.mylyn.reviews.feature.feature.group" version="2.1.0.20131025-2014"/>
+<unit id="org.eclipse.mylyn.commons.feature.group" version="3.10.0.20131007-0130"/>
+<unit id="org.eclipse.mylyn_feature.feature.group" version="3.10.0.20131010-2023"/>
+<repository location="http://download.eclipse.org/mylyn/releases/latest"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.apache.commons.io" version="2.0.1.v201105210651"/>
@@ -24,13 +31,6 @@
 <unit id="org.json" version="1.0.0.v201011060100"/>
 <unit id="org.junit" version="4.8.2.v4_8_2_v20110321-1705"/>
 <repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20110523182458/repository/"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.tmatesoft.svnkit.feature.group" version="1.7.9.r9659_v20130411_2103"/>
-<unit id="org.tigris.subversion.clientadapter.feature.feature.group" version="1.8.6"/>
-<unit id="org.tigris.subversion.subclipse.feature.group" version="1.8.22"/>
-<unit id="org.tigris.subversion.clientadapter.svnkit.feature.feature.group" version="1.7.9.2"/>
-<repository location="http://subclipse.tigris.org/update_1.8.x"/>
 </location>
 </locations>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>

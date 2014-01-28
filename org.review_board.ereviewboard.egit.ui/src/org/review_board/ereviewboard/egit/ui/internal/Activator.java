@@ -22,7 +22,7 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator extends Plugin {
 
-    public static final String PLUGIN_ID = "org.review_board.ereviewboard.subclipse.ui";
+    public static final String PLUGIN_ID = "org.review_board.ereviewboard.egit.ui";
 
     private static volatile Activator DEFAULT;
     

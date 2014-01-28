@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<site
-      associateSitesURL="http://rombert.github.com/ereviewboard/update/associate-sites.xml">
-   <description>
-      eReviewBoard Update Site
-   </description>
-   <feature url="org.review_board.ereviewboard_0.13.2.qualifier" id="org.review_board.ereviewboard" version="0.13.2.qualifier">
-      <category name="eReviewBoard"/>
-   </feature>
-   <feature url="features/org.review_board.ereviewboard.subclipse_0.13.2.qualifier.jar" id="org.review_board.ereviewboard.subclipse" version="0.13.2.qualifier">
-      <category name="eReviewBoard Integrations"/>
-   </feature>
-   <feature url="features/org.review_board.ereviewboard.egit_0.13.2.qualifier.jar" id="org.review_board.ereviewboard.egit" version="0.13.2.qualifier">
-      <category name="eReviewBoard Integrations"/>
-   </feature>
-   <feature url="features/org.review_board.ereviewboard.cvs_0.13.2.qualifier.jar" id="org.review_board.ereviewboard.cvs" version="0.13.2.qualifier">
-      <category name="eReviewBoard Integrations"/>
-   </feature>
-   <category-def name="eReviewBoard" label="eReviewBoard"/>
-   <category-def name="eReviewBoard Integrations" label="eReviewBoard Integrations"/>
+<site>
+   <feature url="features/org.review_board.ereviewboard_0.13.4.qualifier.jar" id="org.review_board.ereviewboard" version="0.13.4.qualifier"/>
+   <feature url="features/org.review_board.ereviewboard.egit_0.13.4.qualifier.jar" id="org.review_board.ereviewboard.egit" version="0.13.4.qualifier"/>
 </site>
