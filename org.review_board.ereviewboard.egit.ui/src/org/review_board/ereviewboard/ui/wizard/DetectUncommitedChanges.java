@@ -1,6 +1,7 @@
 package org.review_board.ereviewboard.ui.wizard;
 
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -23,7 +24,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.team.core.RepositoryProvider;
-import org.review_board.ereviewboard.ui.util.UiUtils;
 
 public class DetectUncommitedChanges extends WizardPage{
 
@@ -59,6 +59,67 @@ public class DetectUncommitedChanges extends WizardPage{
 			_repository = repositoryMapping.getRepository();
 
 		}
+		
+		if (_repository.isBare()) {
+			return new HashSet<String>();
+		}
+		
+		Git client = new Git(_repository);
+
+		
+		Status status = client.status().call();
+		
+		if (status.isClean()) {
+			return new HashSet<String>();
+		}
+		
+		Set<String> changes = new HashSet<String>();
+		changes.addAll(status.getAdded());
+		changes.addAll(status.getChanged());
+		changes.addAll(status.getConflicting());
+		changes.addAll(status.getMissing());
+		changes.addAll(status.getModified());
+		changes.addAll(status.getRemoved());
+		
+		if (_project != null) {
+			String projectPath = _project.getFullPath().toString();
+			if (projectPath.startsWith("/")) {
+				projectPath = projectPath.substring(1);
+			}
+			if (!projectPath.endsWith("/")) {
+				projectPath = projectPath + "/";
+			}
+			Set<String> projectFiles =  new HashSet<String>();
+			for (String file : changes) {
+				if (file.startsWith(projectPath)) {
+					projectFiles.add(file);
+				}
+			}
+		}
+
+		return changes;
+		
+		/*
+		 * 
+		 * jGit version 3.2.0
+		 * 
+		 * 
+		 * 
+		 * if (_repository == null) {
+			GitProvider gitProvider = (GitProvider) RepositoryProvider.getProvider(_project);
+			Assert.isNotNull(gitProvider, "No " + GitProvider.class.getSimpleName() + " for " + _project);
+			GitProjectData data = gitProvider.getData();
+
+			RepositoryMapping repositoryMapping = data.getRepositoryMapping(_project);
+
+			_repository = repositoryMapping.getRepository();
+
+		}
+		if (_repository.isBare()) {
+			return new HashSet<String>();
+		}
+		
+		
 		Git client = new Git(_repository);
 
 		Status status;
@@ -75,9 +136,7 @@ public class DetectUncommitedChanges extends WizardPage{
 			}
 			status = client.status().addPath(projectPath).call();
 		}
-		
-
-		return status.getUncommittedChanges();
+		 */
 	}
 
 	public void createControl(Composite parent) {

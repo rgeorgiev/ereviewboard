@@ -62,7 +62,9 @@ class PublishReviewRequestPage extends WizardPage {
       _context = context;
 
       ObjectId objectId = null;
+      Repository repo;
       if (project == null) {
+    	 repo = repository;
          BranchTrackingStatus status = BranchTrackingStatus.of(repository, branch.getName());
          if (null == status) {
             branchName = Constants.MASTER;
@@ -81,12 +83,19 @@ class PublishReviewRequestPage extends WizardPage {
 
          RepositoryMapping repositoryMapping = data.getRepositoryMapping(project);
 
-         Repository repo = repositoryMapping.getRepository();
-         branchName = BranchTrackingStatus.of(repo, repo.getFullBranch()).getRemoteTrackingBranch();
+         repo = repositoryMapping.getRepository();
+         
+         BranchTrackingStatus status = BranchTrackingStatus.of(repo, repo.getFullBranch());
+         if (status == null) {
+        	 branchName = Constants.MASTER;
+         } else {
+             branchName = status.getRemoteTrackingBranch();
+         }
+
          objectId = repo.getRef(repo.getFullBranch()).getObjectId();
       }
 
-      RevWalk walk = new RevWalk(repository);
+      RevWalk walk = new RevWalk(repo);
       RevCommit commit = walk.parseCommit(objectId);
       commitFirstLine = commit.getShortMessage();
       commitDescription = commit.getFullMessage().substring(commitFirstLine.length()).trim();
